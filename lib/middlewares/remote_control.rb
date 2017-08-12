@@ -28,9 +28,8 @@ class RemoteControl
     @@config
   end
 
-  def self.set_as_blocking(resource)
-   @@is_blocking = true
-   @@resource = resource
+  def self.reserve_resource(resource)
+    Reserved_resources.add(resource)
   end
 
   def self.connect_to_server
@@ -40,6 +39,7 @@ class RemoteControl
 
   def self.connect_to_first_server
     Hosts.create([])
+    Reserved_resources.create([])
     unless @@config[:first_server]
       begin
         existing_hosts = connect_to_server
@@ -83,11 +83,12 @@ class RemoteControl
       Hosts.remove(data['this_host'])
       [201, {}, []]
     else
-      response = @app.call(env)
-      # if self.class.options[:foo] == :bar
-      if @@is_blocking
+      params = Rack::Request.new(env).params
+      if Reserved_resources.any? params
+        [400, {}, ['Resource locked']]
+      else
+        @app.call(env)
       end
-      response
     end
   end
 
@@ -100,28 +101,56 @@ class RemoteControl
   end
 end
 
-class Hosts
-  def self.create(hosts = [])
-    File.open('hosts.csv', 'w') { |f| hosts.each { |h| f.write(h + "\n") }}
+class FileManagment
+  def self.create(itens = [])
+    File.open(file, 'w') { |f| itens.each { |iten| f.write(iten + "\n") }}
   end
 
-  def self.add(host)
-    return if all.include?(host)
+  def self.add(iten)
+    return if all.include?(iten)
 
-    File.open('hosts.csv', 'a') do |f|
-      f.write(host + "\n")
+    File.open(file, 'a') do |f|
+      f.write(iten)
+      f.write("\n")
     end
   end
 
-  def self.remove(host)
-    hosts = all
-    hosts.delete_if { |h| h == host}
-    self.create(hosts)
+  def self.remove(item_to_remove)
+    itens = all
+    itens.delete_if { |item| item == item_to_remove }
+    self.create(itens)
   end
 
   def self.all
-    File.open('hosts.csv', 'r') do |f|
-      f.map { |h|; h.gsub(/\n/, '') }
+    File.open(file, 'r') do |f|
+      f.map { |item|; item.gsub(/\n/, '') }
+    end
+  end
+end
+
+class Hosts < FileManagment
+  def self.file
+    'hosts.csv'
+  end
+end
+
+class Reserved_resources < FileManagment
+  def self.file
+    'reserved_resources.csv'
+  end
+
+  def self.add(resource)
+    resource = resource.to_json
+    super(resource)
+  end
+
+  def self.all
+    super.map { |resource| JSON.parse(resource) }
+  end
+
+  def self.any?(resource)
+    all.any? do |r|
+      r == resource.stringify_keys
     end
   end
 end

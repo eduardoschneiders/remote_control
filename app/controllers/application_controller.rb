@@ -2,7 +2,7 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
   def blocking
-    MyTest.set_as_blocking({ passagem: { target: 'taquara' }})
+    RemoteControl.reserve_resource({ plain: params[:plain], seat: params[:seat]})
     render plain: 'BLOCKED'
   end
 
