@@ -1,10 +1,12 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
 
-  def index
+  def blocking
+    MyTest.set_as_blocking({ passagem: { target: 'taquara' }})
+    render plain: 'BLOCKED'
+  end
 
-    MyTest.set_as_blocking
-    request.env['TEST'] = :foo
-    render plain: 'OK'
+  def no_blocking
+    render plain: 'NO BLOCKED'
   end
 end
