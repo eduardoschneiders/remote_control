@@ -56,6 +56,25 @@ class RemoteControl
     JSON.parse(response.body)['existing_hosts']
   end
 
+  def self.setup
+    connect_to_first_server
+
+    Thread.new do
+      while true do
+        ReservedResources.all_with_created_at.each do |resource|
+
+          # p "#{resource['created_at'].to_time} #{Time.at(DateTime.now.to_i - 60 * 1)}"
+          if resource['created_at'].to_time <= Time.at(DateTime.now.to_i - 60 * 1)
+            p "Removing resource #{resource.inspect}"
+            ReservedResources.remove(resource['resource'])
+          end
+        end
+
+        sleep(3)
+      end
+    end
+  end
+
   def self.connect_to_first_server
     Hosts.create([])
     ReservedResources.create([])
@@ -169,12 +188,17 @@ class ReservedResources < FileManagment
   end
 
   def self.add(resource)
-    resource = resource.to_json
-    super(resource)
+    super({ created_at: DateTime.now, resource: resource }.to_json)
   end
 
   def self.all
-    super.map { |resource| JSON.parse(resource) }
+    super.map { |record| JSON.parse(record)['resource'] }
+  end
+
+  def self.all_with_created_at
+    File.open(file, 'r') do |f|
+      f.map { |item|; JSON.parse(item.gsub(/\n/, '')) }
+    end
   end
 
   def self.remove(resource)
@@ -182,7 +206,7 @@ class ReservedResources < FileManagment
   end
 
   def self.create(resources = [])
-    super(resources.map { |r| r.to_json })
+    super(resources.map { |resource| { created_at: DateTime.now, resource: resource }.to_json })
   end
 
   def self.any?(resource)
