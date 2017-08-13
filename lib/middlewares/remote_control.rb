@@ -24,7 +24,8 @@ class RemoteControl
     @@config.merge!({
       register_first_new_host: '/register_first_new_host',
       update_new_host: '/update_new_host',
-      update_remove_host: '/update_remove_host'
+      update_remove_host: '/update_remove_host',
+      check_resource_available: '/check_resource_available'
     })
 
     @@config[:host_server] = 'http://localhost:3000' unless @@config[:host_server]
@@ -38,6 +39,14 @@ class RemoteControl
     if ReservedResources.any?(resource)
       raise BlockedResource
     else
+      Hosts.all.each do |host|
+        response = self.post(host + @@config[:check_resource_available], { resource: resource.to_json })
+
+        if JSON.parse(response.body)['resource_reserved']
+          raise BlockedResource
+        end
+      end
+
       ReservedResources.add(resource)
     end
   end
@@ -96,6 +105,10 @@ class RemoteControl
       data = JSON.parse(env['rack.input'].gets)
       Hosts.remove(data['this_host'])
       [201, {}, []]
+    elsif env['REQUEST_METHOD'] == 'POST' && env['PATH_INFO'] == '/check_resource_available'
+      params = JSON.parse(env['rack.input'].gets)
+      resource = JSON.parse(params['resource'])
+      [200, {}, [{ resource_reserved: ReservedResources.any?(resource) }.to_json]]
     else
       # params = Rack::Request.new(env).params
 
