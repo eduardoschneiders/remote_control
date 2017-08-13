@@ -1,0 +1,15 @@
+<ul>
+  <% @planes.each do |plane| %>
+    <li>
+      Name: <%= plane.name %><br />
+      Seats: <br>
+      <ul>
+        <% plane.seats.each do |seat| %>
+          <%= link_to try_to_reserve_path(plane.name, seat) do %>
+            <li>Seat number <%= seat %> -> reserved: <%= plane.reserved?(seat) %></li>
+          <% end %>
+        <% end %>
+      </ul>
+    </li>
+  <% end %>
+</ul>
