@@ -2,6 +2,12 @@ require 'net/http'
 require 'uri'
 require 'logger'
 
+class BlockedResource < StandardError
+  def self.t
+    'asdf'
+  end
+end;
+
 class RemoteControl
   attr_accessor :config
   @@config = {}
@@ -29,7 +35,15 @@ class RemoteControl
   end
 
   def self.reserve_resource(resource)
-    Reserved_resources.add(resource)
+    if ReservedResources.any?(resource)
+      raise BlockedResource
+    else
+      ReservedResources.add(resource)
+    end
+  end
+
+  def self.free_resource(resource)
+    ReservedResources.remove(resource)
   end
 
   def self.connect_to_server
@@ -39,7 +53,7 @@ class RemoteControl
 
   def self.connect_to_first_server
     Hosts.create([])
-    Reserved_resources.create([])
+    ReservedResources.create([])
     unless @@config[:first_server]
       begin
         existing_hosts = connect_to_server
@@ -83,12 +97,13 @@ class RemoteControl
       Hosts.remove(data['this_host'])
       [201, {}, []]
     else
-      params = Rack::Request.new(env).params
-      if Reserved_resources.any? params
-        [400, {}, ['Resource locked']]
-      else
+      # params = Rack::Request.new(env).params
+
+      # if ReservedResources.any? params
+      #   [400, {}, ['Resource locked']]
+      # else
         @app.call(env)
-      end
+      # end
     end
   end
 
@@ -103,7 +118,12 @@ end
 
 class FileManagment
   def self.create(itens = [])
-    File.open(file, 'w') { |f| itens.each { |iten| f.write(iten + "\n") }}
+    File.open(file, 'w') do |f|
+      itens.each do |iten|
+        f.write(iten)
+        f.write("\n")
+      end
+    end
   end
 
   def self.add(iten)
@@ -134,7 +154,7 @@ class Hosts < FileManagment
   end
 end
 
-class Reserved_resources < FileManagment
+class ReservedResources < FileManagment
   def self.file
     'reserved_resources.csv'
   end
@@ -146,6 +166,14 @@ class Reserved_resources < FileManagment
 
   def self.all
     super.map { |resource| JSON.parse(resource) }
+  end
+
+  def self.remove(resource)
+    super(resource.stringify_keys)
+  end
+
+  def self.create(resources = [])
+    super(resources.map { |r| r.to_json })
   end
 
   def self.any?(resource)
