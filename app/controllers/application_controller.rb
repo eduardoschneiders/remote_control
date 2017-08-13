@@ -1,7 +1,7 @@
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
   rescue_from BlockedResource do
-    render json: {msg: 'Resource already reserved'}, status: 400, content_type: "json/text"
+    render json: {msg: 'Resource already reserved'}, status: 403, content_type: "application/json"
   end
 
   def block
@@ -12,11 +12,5 @@ class ApplicationController < ActionController::Base
   def unblock
     RemoteControl.free_resource({ plain: params[:plain], seat: params[:seat]})
     render plain: 'Resource not reserved anymore'
-  end
-
-  private
-
-  def blockd_resource
-    render json: {msg: 'Resource already reserved'}, status: 400, content_type: "json/text"
   end
 end
