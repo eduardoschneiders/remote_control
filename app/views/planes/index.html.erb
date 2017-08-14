@@ -5,11 +5,30 @@
       Seats: <br>
       <ul>
         <% plane.seats.each do |seat| %>
-          <%= link_to try_to_reserve_path(plane.name, seat) do %>
-            <li>Seat number <%= seat %> -> reserved: <%= plane.reserved?(seat) %></li>
+          <%= link_to try_to_reserve_path(plane.name, seat), remote: true do %>
+            <li style="<%= 'background: red' if plane.reserved?(seat) %>">
+              Seat number <%= seat %>
+            </li>
           <% end %>
         <% end %>
       </ul>
     </li>
   <% end %>
 </ul>
+
+<script>
+$('a[data-remote]').on('ajax:success', function(data, as){
+  console.log('success');
+  console.log(data);
+  console.log(as);
+  window.location = '<%= signup_path %>';
+}).on('ajax:error', function(data){
+  var msg = data['detail'][0]['msg'];
+  $('#error').text(msg);
+  $('#error').show();
+  setTimeout(function(){
+    $('#error').text('');
+    $('#error').hide();
+  }, 5000);
+});
+</script>

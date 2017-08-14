@@ -7,7 +7,8 @@ class PlanesController < ApplicationController
     booking = { plane_name: params[:plane_name], seat_number: params[:seat_number]}
     RemoteControl.reserve_resource(booking)
     session[:booking] = booking
-    redirect_to signup_path
+
+    render json: {}.to_json, status: 200, content_type: "application/json", location: '/testtt'
   end
 
   def signup
@@ -18,7 +19,8 @@ class PlanesController < ApplicationController
     RemoteControl.free_resource(booking)
     Plane.where(name: booking['plane_name']).first.reserve(booking['seat_number'])
 
-    render html: "Seat #{booking['seat_number']} on plane #{booking['plane_name']} reserved #{view_context.link_to 'voltar', planes_path}".html_safe
+    return redirect_to planes_path
+    # render html: "Seat #{booking['seat_number']} on plane #{booking['plane_name']} reserved #{view_context.link_to 'voltar', planes_path}".html_safe
   end
 
   private
