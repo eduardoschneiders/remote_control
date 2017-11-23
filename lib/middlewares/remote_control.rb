@@ -202,7 +202,7 @@ class ReservedResources < FileManagment
   end
 
   def self.remove(resource)
-    super(resource.stringify_keys)
+    super(resource.stringify_keys) if resource
   end
 
   def self.create(resources = [])

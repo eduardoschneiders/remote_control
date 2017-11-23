@@ -1,5 +1,36 @@
-<%= form_tag reserved_path, method: :post do %>
-  Name: <%= text_field_tag :name %><br />
-  password: <%= text_field_tag :password %><br />
-  <%= submit_tag 'Signup'%>
+<% content_for :page_title do %>
+  Cadastro
+<% end %>
+
+
+
+<%= form_for :signup, url: reserved_path do |f| %>
+  <table class="table table-striped">
+    <tbody>
+      <tr>
+        <th style="text-align: right">Name: </th>
+        <td><%= f.text_field :name %></td>
+      </tr>
+
+      <tr>
+        <th style="text-align: right">Password: </th>
+        <td><%= f.text_field :password %></td>
+      </tr>
+
+      <tr>
+        <th style="text-align: right">Confirm password: </th>
+        <td><%= f.text_field :confirm_password %></td>
+      </tr>
+
+      <tr>
+        <th style="text-align: right">Age: </th>
+        <td><%= f.text_field :age %></td>
+      </tr>
+
+      <tr>
+        <th style="text-align: right"><%= f.submit 'Signup' %></th>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
 <% end %>

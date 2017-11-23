@@ -1,23 +1,25 @@
 class Plane
-  attr_accessor :id, :name, :seats, :reserved_seats
+  attr_accessor :id, :name, :seats, :reserved_seats, :from, :to
 
   MODEL_NAME = 'planes'
 
-  def initialize(id:, name:, seats:, reserved_seats:)
+  def initialize(id:, name:, seats:, reserved_seats:, from:, to:)
     @id = id
     @name = name
     @seats = seats
     @reserved_seats = reserved_seats
+    @from = from
+    @to = to
   end
 
   def self.all
-    @all ||= begin
+    # @all ||= begin
        response = firebase.get(MODEL_NAME)
        response.body.map do |id, properties|
          data = properties.merge(id: id).symbolize_keys
          Plane.new(data)
        end
-     end
+     # end
   end
 
   def self.where(query)
@@ -26,6 +28,17 @@ class Plane
         plane.send(property) == value
       end
     end
+  end
+
+  def self.find(id)
+    where(id: id).first
+  end
+
+  def self.create(params)
+    params[:seats] = params[:seats].to_i.times.map { |i| i }
+
+    plane = new(params)
+    plane.send(:save)
   end
 
   def reserved?(seat)
@@ -62,6 +75,10 @@ class Plane
   end
 
   def save
-    firebase.update(MODEL_NAME, "#{self.id}" => self.to_hash)
+    if self.id.present?
+      firebase.update(MODEL_NAME, "#{self.id}" => self.to_hash)
+    else
+      firebase.push(MODEL_NAME, self.to_hash)
+    end
   end
 end

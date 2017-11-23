@@ -1,34 +1,45 @@
-<ul>
-  <% @planes.each do |plane| %>
-    <li>
-      Name: <%= plane.name %><br />
-      Seats: <br>
-      <ul>
-        <% plane.seats.each do |seat| %>
-          <%= link_to try_to_reserve_path(plane.name, seat), remote: true do %>
-            <li style="<%= 'background: red' if plane.reserved?(seat) %>">
-              Seat number <%= seat %>
-            </li>
-          <% end %>
-        <% end %>
-      </ul>
-    </li>
-  <% end %>
-</ul>
+<% content_for :page_title do %>
+  Voos disponíveis
+<% end %>
 
-<script>
-$('a[data-remote]').on('ajax:success', function(data, as){
-  console.log('success');
-  console.log(data);
-  console.log(as);
-  window.location = '<%= signup_path %>';
-}).on('ajax:error', function(data){
-  var msg = data['detail'][0]['msg'];
-  $('#error').text(msg);
-  $('#error').show();
-  setTimeout(function(){
-    $('#error').text('');
-    $('#error').hide();
-  }, 5000);
-});
-</script>
+<% if booking = session.delete(:booking) %>
+  <div class="card w-75" style="width: 40%; margin-bottom: 40px;">
+    <div class="card-body">
+      <h4 class="card-title">Booking reserved</h4>
+      <p class="card-text">
+        Seat <b><%=  booking['seat_number'] %></b> on plane <b><%= booking['plane_name'] %></b> reserved
+      </p>
+
+      <%= link_to 'Go to plane page', plane_path(booking['plane_id']), class: 'btn btn-primary' %>
+    </div>
+  </div>
+<% end %>
+
+<div class="row justify-content-md-center">
+  <table class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Name</th>
+        <th scope="col">Seats</th>
+        <th scope="col">From</th>
+        <th scope="col">To</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @planes.each_with_index do |plane, i|%>
+        <tr>
+          <th scope="row"><%= i %></th>
+          <td>
+            <%= link_to plane_path(plane.id) do %>
+              <%= plane.name %>
+            <% end%>
+          </td>
+          <td><%= plane.reserved_seats.size - 1 %>/<%= plane.seats.size %></td>
+          <td><%= plane.from %></td>
+          <td><%= plane.to%></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

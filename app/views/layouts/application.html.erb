@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>DistributedSystem</title>
+    <title>Distributed System</title>
     <%= csrf_meta_tags %>
 
     <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= stylesheet_link_tag    'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css', media: 'all', 'data-turbolinks-track': 'reload' %>
     <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
   </head>
 
   <body>
-    <div id="error" style="background: #ccc; padding: 10px; font-weight: bold; position: fixed; display: none"></div>
-    <%= yield %>
+    <div class="container">
+      <nav class="nav">
+        <%= link_to 'Inicio', root_path, class: 'nav-link active' %>
+        <%= link_to 'Cadastrar voo', admin_path, class: 'nav-link active' %>
+      </nav>
+
+      <div id="error" class="alert-danger" style="padding: 10px; font-weight: bold; position: fixed; display: none;">errors</div>
+      <h2 style="margin: 40px 0"><%= yield :page_title %></h2>
+      <%= yield %>
+    </div>
   </body>
 </html>

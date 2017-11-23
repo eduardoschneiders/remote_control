@@ -1,0 +1,50 @@
+<% content_for :page_title do %>
+  <%= @plane.name %>
+<% end %>
+
+<div class="row justify-content-md-center">
+  <% @plane.seats.size.times.each  do |seat| %>
+    <div class="col-2 rounded" style="background: #ececec; margin: 5px; padding: 5px">
+      <center>
+        <div style="width: 110px;">
+          <div style="font-size: 12px; margin-bottom: 15px;">
+            Banco: <b><%= seat %></b>
+          </div>
+
+          <%
+            link_options = {
+              remote: true,
+              role: 'button',
+              class: 'btn btn-primary'
+            }
+
+            link_options[:class] << ' disabled' if @plane.reserved?(seat)
+          %>
+
+          <%= link_to try_to_reserve_path(@plane.id, seat), link_options do %>
+            <%= @plane.reserved?(seat) ? 'Reservado' : 'Reservar' %>
+          <% end %>
+        </div>
+      </center>
+    </div>
+  <% end %>
+</div>
+
+
+
+<script>
+  $('a[data-remote]').on('ajax:success', function(data, as){
+    console.log('success');
+    console.log(data);
+    console.log(as);
+    window.location = '<%= signup_path %>';
+  }).on('ajax:error', function(data){
+    var msg = data['detail'][0]['msg'];
+    $('#error').text(msg);
+    $('#error').show();
+    setTimeout(function(){
+      $('#error').text('');
+      $('#error').hide();
+    }, 5000);
+  });
+</script>

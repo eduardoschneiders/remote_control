@@ -1,0 +1,36 @@
+<% content_for :page_title do %>
+  Cadastrar voo
+<% end %>
+
+
+<%= form_for :plane do |f| %>
+  <table class="table table-striped">
+    <tbody>
+      <tr>
+        <th style="text-align: right">Name: </th>
+        <td><%= f.text_field :name %></td>
+      </tr>
+
+      <tr>
+        <th style="text-align: right">Seats: </th>
+        <td><%= f.text_field :seats %></td>
+      </tr>
+
+      <tr>
+        <th style="text-align: right">From: </th>
+        <td><%= f.text_field :from %></td>
+      </tr>
+
+      <tr>
+        <th style="text-align: right">To: </th>
+        <td><%= f.text_field :to %></td>
+      </tr>
+
+      <tr>
+        <th style="text-align: right"><%= f.submit %></th>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+
+<% end %>
