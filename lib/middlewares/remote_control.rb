@@ -21,10 +21,11 @@ class RemoteControl
       register_first_new_host: '/register_first_new_host',
       update_new_host: '/update_new_host',
       update_remove_host: '/update_remove_host',
-      check_resource_available: '/check_resource_available'
+      check_resource_available: '/check_resource_available',
+      sort_data: '/sort_data'
     })
 
-    @@config[:host_server] = 'http://localhost:3000' unless @@config[:host_server]
+    @@config[:host_server] ||= 'http://localhost:3000'
   end
 
   def self.config
@@ -46,6 +47,63 @@ class RemoteControl
       ReservedResources.add(resource)
     end
   end
+
+  def self.spread_calc(data)
+    # def sort_numbers(numbers)
+    #   size = 3
+
+    #   while size <= numbers.size * 2
+    #     numbers = processor_pack(numbers, size)
+    #     size *= 2
+    #   end
+
+    #   numbers
+    # end
+
+    sort_numbers(data)
+    # Hosts.all.take(2).map do |host|
+    #   response = self.post(host + @@config[:sort_data], { data: data.to_json })
+
+    #   sorted = JSON.parse(response.body)['data']
+    # end
+  end
+
+  def self.processor_pack(numbers, size = 3)
+    numbers_pack = {}
+    sorted_pack = {}
+
+    i = 0
+    while numbers.any?
+      numbers_pack[i] = numbers.slice!(0,size)
+      i += 1
+    end
+
+    numbers_pack.map do |numbers|
+      Thread.new do
+        host = Hosts.all[Random.rand(Hosts.all.size)]
+        response = self.post(host + @@config[:sort_data], { data: numbers[1].to_json })
+
+        sorted = JSON.parse(response.body)['data']
+
+        sorted_pack[numbers[0]] = sorted
+      end
+    end.each(&:join)
+
+    sorted_pack.sort_by { |k, v| k }.map { |pack| pack[1]}.flatten
+  end
+
+  def self.sort_numbers(numbers)
+    size = 3
+
+    while size <= numbers.size * 2
+      numbers = processor_pack(numbers, size)
+      size *= 2
+    end
+
+    numbers
+  end
+
+
 
   def self.free_resource(resource)
     ReservedResources.remove(resource)
@@ -124,14 +182,14 @@ class RemoteControl
       params = JSON.parse(env['rack.input'].gets)
       resource = JSON.parse(params['resource'])
       [200, {}, [{ resource_reserved: ReservedResources.any?(resource) }.to_json]]
-    else
-      # params = Rack::Request.new(env).params
+    elsif env['REQUEST_METHOD'] == 'POST' && env['PATH_INFO'] == '/sort_data'
+      require './lib/sort'
 
-      # if ReservedResources.any? params
-      #   [400, {}, ['Resource locked']]
-      # else
-        @app.call(env)
-      # end
+      params = JSON.parse(env['rack.input'].gets)
+      data = JSON.parse(params['data'])
+      [200, {}, [{ data: sort_numbers(data) }.to_json]]
+    else
+      @app.call(env)
     end
   end
 

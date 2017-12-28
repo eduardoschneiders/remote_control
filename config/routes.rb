@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   get '/planes/:plane_id/try_to_reserve/:seat_number', to: 'planes#try_to_reserve', as: :try_to_reserve
   post '/planes/reserved', to: 'planes#reserved', as: :reserved
 
+  post 'test_sort_data', to: 'sort#sort_data'
   get '/signup', to: 'users#signup'
 
   get '/admin', to: 'admin#show'
